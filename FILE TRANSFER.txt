@@ -1,0 +1,59 @@
+FILE TRANSFER :
+
+SERVER:
+
+
+import socket
+import threading
+import os
+
+def handle_client(conn):
+    filename = conn.recv(1024).decode()
+    pid = os.getpid()
+
+    if os.path.exists(filename):
+        with open(filename, "r") as f:
+            content = f.read()
+        response = f"PID: {pid}\nFile Contents:\n{content}"
+    else:
+        response = f"PID: {pid}\nFile '{filename}' not found."
+
+    conn.sendall(response.encode())
+    conn.close()
+
+server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server.bind(("0.0.0.0", 5000))
+server.listen()
+
+print("File Server started...")
+print("Waiting for clients...")
+
+while True:
+    conn, addr = server.accept()
+    print("Client connected:", addr)
+    thread = threading.Thread(target=handle_client, args=(conn,))
+    thread.start()
+
+CLIENT:
+
+
+import socket
+
+HOST = input("Enter server IP: ")
+PORT = 5000
+
+client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+client.connect((HOST, PORT))
+
+filename = input("Enter file name: ")
+client.send(filename.encode())
+
+data = b""
+while True:
+    chunk = client.recv(1024)
+    if not chunk:
+        break
+    data += chunk
+
+print(data.decode())
+client.close()

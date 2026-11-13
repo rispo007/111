@@ -1,0 +1,67 @@
+MATRIX IDENTIFICATION :
+
+SERVER:
+
+
+import socket
+
+s = socket.socket()
+s.bind(("localhost", 5001))
+s.listen(1)
+
+print("Server started...")
+c, addr = s.accept()
+
+r = c.makefile("r")
+
+n = int(r.readline())
+a = []
+
+for i in range(n):
+    row = list(map(int, r.readline().split()))
+    a.append(row)
+
+upper = True
+lower = True
+
+for i in range(n):
+    for j in range(n):
+        if i > j and a[i][j] != 0:
+            upper = False
+        if i < j and a[i][j] != 0:
+            lower = False
+
+if upper and lower:
+    result = "Diagonal Matrix"
+elif upper:
+    result = "Upper Triangular Matrix"
+elif lower:
+    result = "Lower Triangular Matrix"
+else:
+    result = "Normal Matrix"
+
+c.sendall(result.encode())
+print("Matrix Type:", result)
+
+c.close()
+s.close()
+
+CLIENT :
+
+
+import socket
+
+s = socket.socket()
+s.connect(("localhost", 5001))
+
+n = int(input("Enter order of matrix: "))
+s.sendall((str(n) + "\n").encode())
+
+print("Enter Matrix:")
+for i in range(n):
+    row = input("Enter row: ")
+    s.sendall((row + "\n").encode())
+
+print("Matrix Type:", s.recv(1024).decode())
+
+s.close()
